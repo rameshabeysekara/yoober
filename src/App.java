@@ -15,7 +15,6 @@ public class App {
       menuOptions.add(new CompleteRideMenuOption(conn, in));
 
       System.out.println("Welcome to Yoober!\n");
-
       while (true) {
         printMenu(menuOptions);
         MenuOption selectedOption = getSelectedOption(menuOptions, in);
