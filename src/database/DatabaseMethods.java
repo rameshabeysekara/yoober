@@ -1,5 +1,5 @@
 /*
- * Group members: YOUR NAMES HERE
+ * Group members: Matthew Ovie Enamuotor & Thenahandi Ramesh Bandara Abeysekara
  * Instructions: For Project 2, implement all methods in this class, and test to confirm they behave as expected when the program is run.
  */
 
