@@ -73,23 +73,21 @@ public class DatabaseMethods {
     String getAverageDriverRating = "SELECT AVG(RATING_FROM_PASSENGER) FROM accounts INNER JOIN drivers ON accounts.ID =  drivers.ID INNER JOIN rides ON drivers.ID = rides.DRIVER_ID WHERE EMAIL = ?";
 
     try (PreparedStatement stmt = conn.prepareStatement(getAverageDriverRating)) {
-        stmt.setString(1, driverEmail);
+      stmt.setString(1, driverEmail);
 
-        try (ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                averageRating = rs.getDouble(1);
-            } else {
-                System.out.println("Driver with email '" + driverEmail + "' not found.");
-            }
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (rs.next()) {
+          averageRating = rs.getDouble(1);
+        } else {
+          System.out.println("Driver with email '" + driverEmail + "' not found.");
         }
+      }
     } catch (SQLException e) {
-        System.out.println(e.getMessage());
+      System.out.println(e.getMessage());
     }
 
     return averageRating;
-}
-
-
+  }
 
   /*
    * Accepts: Account details, and passenger and driver specific details.
@@ -198,19 +196,18 @@ public class DatabaseMethods {
   public boolean checkDriverExists(String email) throws SQLException {
     String checkDriverQuery = "SELECT COUNT(*) FROM drivers INNER JOIN accounts ON drivers.ID = accounts.ID WHERE EMAIL = ?";
 
-        try (PreparedStatement stmt = conn.prepareStatement(checkDriverQuery)) {
-            stmt.setString(1, email);
+    try (PreparedStatement stmt = conn.prepareStatement(checkDriverQuery)) {
+      stmt.setString(1, email);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                // return if there is at least one row and if column 1 is greater than 0
-                return rs.next() && rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            return true;
-        }
+      try (ResultSet rs = stmt.executeQuery()) {
+        // return if there is at least one row and if column 1 is greater than 0
+        return rs.next() && rs.getInt(1) > 0;
+      }
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+      return true;
     }
-  
+  }
 
   /*
    * Accepts: Email address
