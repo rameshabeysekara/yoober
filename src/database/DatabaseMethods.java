@@ -195,10 +195,20 @@ public class DatabaseMethods {
    * Returns: True if exists, false if not
    */
   public boolean checkDriverExists(String email) throws SQLException {
-    // TODO: Implement
+    String checkDriverQuery = "SELECT COUNT(*) FROM drivers INNER JOIN accounts ON drivers.ID = accounts.ID WHERE EMAIL = ?";
 
-    return true;
-  }
+        try (PreparedStatement stmt = conn.prepareStatement(checkDriverQuery)) {
+            stmt.setString(1, email);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return true;
+        }
+    }
+  
 
   /*
    * Accepts: Email address
