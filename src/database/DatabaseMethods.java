@@ -35,7 +35,8 @@ public class DatabaseMethods {
         String firstName = rs.getString("FIRST_NAME");
         String lastName = rs.getString("LAST_NAME");
 
-        Address address = new Address(rs.getString("STREET"),
+        Address address = new Address(
+            rs.getString("STREET"),
             rs.getString("CITY"),
             rs.getString("PROVINCE"), rs.getString("POSTAL_CODE"));
 
@@ -51,8 +52,7 @@ public class DatabaseMethods {
 
         accounts.add(accountDetails);
 
-      }
-      ;
+      };
     } catch (SQLException e) {
       System.out.println(e.getMessage());
     }
