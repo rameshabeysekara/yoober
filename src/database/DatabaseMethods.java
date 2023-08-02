@@ -201,6 +201,7 @@ public class DatabaseMethods {
             stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {
+                // return if there is at least one row and if column 1 is greater than 0
                 return rs.next() && rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
