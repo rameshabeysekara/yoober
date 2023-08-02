@@ -70,10 +70,23 @@ public class DatabaseMethods {
   public double getAverageRatingForDriver(String driverEmail) throws SQLException {
     double averageRating = 0.0;
 
-    // TODO: Implement
+    String getAverageDriverRating = "SELECT AVG(RATING_FROM_PASSENGER) FROM accounts INNER JOIN drivers ON accounts.ID =  drivers.ID INNER JOIN rides ON drivers.ID = rides.DRIVER_ID WHERE EMAIL = ?";
+
+    try (PreparedStatement stmt = conn.prepareStatement(getAverageDriverRating)) {
+        stmt.setString(1, driverEmail);
+
+        try (ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                averageRating = rs.getDouble(1);
+            }
+        }
+    } catch (SQLException e) {
+        System.out.println(e.getMessage());
+    }
 
     return averageRating;
-  }
+}
+
 
   /*
    * Accepts: Account details, and passenger and driver specific details.
