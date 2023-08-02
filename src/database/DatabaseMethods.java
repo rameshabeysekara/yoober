@@ -26,7 +26,7 @@ public class DatabaseMethods {
   public ArrayList<Account> getAllAccounts() throws SQLException {
     ArrayList<Account> accounts = new ArrayList<Account>();
 
-    String getAccountDetails = "SELECT a.FIRST_NAME, a.LAST_NAME, a.BIRTHDATE, a.PHONE_NUMBER, a.EMAIL, ad.STREET, ad.CITY, ad.PROVINCE, ad.POSTAL_CODE, CASE WHEN p.ID IS NOT NULL THEN 1 ELSE 0 END AS isPassenger, CASE WHEN d.ID IS NOT NULL THEN 1 ELSE 0 END AS isDriver FROM accounts AS a LEFT JOIN addresses AS ad ON a.ADDRESS_ID = ad.ID LEFT JOIN passengers AS p ON a.ID = p.ID LEFT JOIN drivers AS d ON a.ID = d.ID";
+    String getAccountDetails = "SELECT * FROM accounts, addresses WHERE accounts.ADDRESS_ID = addresses.ID";
     try (
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(getAccountDetails)) {
@@ -43,8 +43,8 @@ public class DatabaseMethods {
         String phoneNumber = rs.getString("PHONE_NUMBER");
         String email = rs.getString("EMAIL");
         String birthdate = rs.getString("BIRTHDATE");
-        boolean isPassenger = rs.getBoolean("isPassenger");
-        boolean isDriver = rs.getBoolean("isDriver");
+        boolean isPassenger = true;
+        boolean isDriver = true;
 
         Account accountDetails = new Account(firstName, lastName, address.getStreet(), address.getCity(),
             address.getProvince(), address.getPostalCode(), phoneNumber, email,
@@ -52,8 +52,7 @@ public class DatabaseMethods {
 
         accounts.add(accountDetails);
 
-      }
-      ;
+      };
     } catch (SQLException e) {
       System.out.println(e.getMessage());
     }
@@ -78,6 +77,8 @@ public class DatabaseMethods {
         try (ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 averageRating = rs.getDouble(1);
+            } else {
+                System.out.println("Driver with email '" + driverEmail + "' not found.");
             }
         }
     } catch (SQLException e) {
@@ -86,6 +87,7 @@ public class DatabaseMethods {
 
     return averageRating;
 }
+
 
 
   /*
