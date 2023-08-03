@@ -100,9 +100,17 @@ public class DatabaseMethods {
    * Returns: Nothing
    */
   public void createAccount(Account account, Passenger passenger, Driver driver) throws SQLException {
-    // TODO: Implement
-    // Hint: Use the available insertAccount, insertPassenger, and insertDriver
-    // methods
+
+    if (account.isDriver()) {
+      int accountId = insertAccount(account);
+      insertDriver(driver, accountId);
+    }
+    if (account.isPassenger()) {
+      int accountId = insertAccount(account);
+      insertPassenger(passenger, accountId);
+    } else {
+      insertAccount(account);
+    }
   }
 
   /*
@@ -115,8 +123,30 @@ public class DatabaseMethods {
   public int insertAccount(Account account) throws SQLException {
     int accountId = -1;
 
-    // TODO: Implement
-    // Hint: Use the insertAddressIfExists method
+    int addressId = insertAddressIfExists(account.getAddress());
+    String insertAccount = "INSERT INTO accounts (FIRST_NAME, LAST_NAME, BIRTHDATE, ADDRESS_ID, PHONE_NUMBER, EMAIL) VALUES (?, ?, ?, ?, ?, ?)";
+    try (
+        PreparedStatement insert = conn.prepareStatement(insertAccount, Statement.RETURN_GENERATED_KEYS)) {
+
+      System.out.println("Phone: " + account.getPhoneNumber());
+      insert.setString(1, account.getFirstName());
+      insert.setString(2, account.getLastName());
+      insert.setString(3, account.getBirthdate());
+      insert.setInt(4, addressId);
+      insert.setString(5, account.getPhoneNumber());
+      insert.setString(6, account.getEmail());
+
+      int rowsAffected = insert.executeUpdate();
+      System.out.println("rows: "+rowsAffected+"\n");
+
+      if (rowsAffected == 1) {
+        ResultSet rs = insert.getGeneratedKeys();
+        if (rs.next()) {
+          accountId = rs.getInt(1);
+        }
+      }
+
+    }
 
     return accountId;
   }
@@ -129,7 +159,26 @@ public class DatabaseMethods {
    * Returns: Id of the new passenger
    */
   public int insertPassenger(Passenger passenger, int accountId) throws SQLException {
-    // TODO: Implement
+
+    if (!passenger.equals(null)) {
+      String insertPassenger = "INSERT INTO passengers (ID, CREDIT_CARD_NUMBER) VALUES (?, ?)";
+      try (
+          PreparedStatement insert = conn.prepareStatement(insertPassenger, Statement.RETURN_GENERATED_KEYS);) {
+
+        insert.setInt(1, accountId);
+        insert.setString(2, passenger.getCreditCardNumber());
+
+        int rowsAffected = insert.executeUpdate();
+
+        if (rowsAffected == 1) {
+          ResultSet rs = insert.getGeneratedKeys();
+          if (rs.next()) {
+            accountId = rs.getInt(1);
+          }
+        }
+
+      }
+    }
 
     return accountId;
   }
@@ -141,8 +190,27 @@ public class DatabaseMethods {
    * Returns: Id of the new driver
    */
   public int insertDriver(Driver driver, int accountId) throws SQLException {
-    // TODO: Implement
-    // Hint: Use the insertLicense method
+
+    int licenseId = insertLicense(driver.getLicenseNumber(), driver.getLicenseExpiryDate());
+    if (!driver.equals(null)) {
+      String insertDriver = "INSERT INTO drivers (ID, LICENSE_ID) VALUES (?, ?)";
+      try (
+          PreparedStatement insert = conn.prepareStatement(insertDriver, Statement.RETURN_GENERATED_KEYS);) {
+
+        insert.setInt(1, accountId);
+        insert.setInt(2, licenseId);
+
+        int rowsAffected = insert.executeUpdate();
+
+        if (rowsAffected == 1) {
+          ResultSet rs = insert.getGeneratedKeys();
+          if (rs.next()) {
+            accountId = rs.getInt(1);
+          }
+        }
+
+      }
+    }
 
     return accountId;
   }
@@ -154,7 +222,23 @@ public class DatabaseMethods {
    */
   public int insertLicense(String licenseNumber, String licenseExpiry) throws SQLException {
     int licenseId = -1;
-    // TODO: Implement
+
+    String insertLicense = "INSERT INTO licenses (NUMBER, EXPIRY_DATE) VALUES (?, ?)";
+    try (
+        PreparedStatement insert = conn.prepareStatement(insertLicense, Statement.RETURN_GENERATED_KEYS);) {
+
+      insert.setString(1, licenseNumber);
+      insert.setString(2, licenseExpiry);
+
+      int rowsAffected = insert.executeUpdate();
+
+      if (rowsAffected == 1) {
+        ResultSet rs = insert.getGeneratedKeys();
+        if (rs.next()) {
+          licenseId = rs.getInt(1);
+        }
+      }
+    }
 
     return licenseId;
   }
@@ -171,8 +255,37 @@ public class DatabaseMethods {
   public int insertAddressIfExists(Address address) throws SQLException {
     int addressId = -1;
 
-    // TODO: Implement
+    String checkAddress = "SELECT ID FROM addresses WHERE STREET = ? AND CITY = ? AND PROVINCE = ? AND POSTAL_CODE = ?";
+    String insertAddress = "INSERT INTO addresses (STREET, CITY, PROVINCE, POSTAL_CODE) VALUES (?, ?, ?, ?)";
 
+    try (PreparedStatement check = conn.prepareStatement(checkAddress);
+        PreparedStatement insert = conn.prepareStatement(insertAddress, Statement.RETURN_GENERATED_KEYS)) {
+
+      check.setString(1, address.getStreet());
+      check.setString(2, address.getCity());
+      check.setString(3, address.getProvince());
+      check.setString(4, address.getPostalCode());
+
+      ResultSet rs = check.executeQuery();
+
+      if (rs.next()) {
+        addressId = rs.getInt("ID");
+      } else {
+        insert.setString(1, address.getStreet());
+        insert.setString(2, address.getCity());
+        insert.setString(3, address.getProvince());
+        insert.setString(4, address.getPostalCode());
+
+        int rowsAffected = insert.executeUpdate();
+
+        if (rowsAffected == 1) {
+          ResultSet rsRow = insert.getGeneratedKeys();
+          if (rsRow.next()) {
+            addressId = rsRow.getInt(1);
+          }
+        }
+      }
+    }
     return addressId;
   }
 
