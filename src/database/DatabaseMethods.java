@@ -124,20 +124,19 @@ public class DatabaseMethods {
     int accountId = -1;
 
     int addressId = insertAddressIfExists(account.getAddress());
-    String insertAccount = "INSERT INTO accounts (FIRST_NAME, LAST_NAME, BIRTHDATE, ADDRESS_ID, PHONE_NUMBER, EMAIL) VALUES (?, ?, ?, ?, ?, ?)";
+    String insertAccount = "INSERT INTO accounts (FIRST_NAME, LAST_NAME, BIRTHDATE, ADDRESS_ID, PHONE_NUMBER, EMAIL) SELECT ?, ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE EMAIL = ?)";
     try (
         PreparedStatement insert = conn.prepareStatement(insertAccount, Statement.RETURN_GENERATED_KEYS)) {
 
-      System.out.println("Phone: " + account.getPhoneNumber());
       insert.setString(1, account.getFirstName());
       insert.setString(2, account.getLastName());
       insert.setString(3, account.getBirthdate());
       insert.setInt(4, addressId);
       insert.setString(5, account.getPhoneNumber());
       insert.setString(6, account.getEmail());
+      insert.setString(7, account.getEmail());
 
       int rowsAffected = insert.executeUpdate();
-      System.out.println("rows: "+rowsAffected+"\n");
 
       if (rowsAffected == 1) {
         ResultSet rs = insert.getGeneratedKeys();
@@ -298,7 +297,19 @@ public class DatabaseMethods {
    */
   public void insertFavouriteDestination(String favouriteName, String passengerEmail, int addressId)
       throws SQLException {
-    // TODO: Implement
+
+    int passengerId = getPassengerIdFromEmail(passengerEmail);
+    if (passengerId != -1) {
+      String insertFavouriteDestination = "INSERT INTO favourite_locations (PASSENGER_ID, LOCATION_ID, NAME) VALUES (?, ?, ?)";
+      try (PreparedStatement insertStmt = conn.prepareStatement(insertFavouriteDestination)) {
+        insertStmt.setInt(1, passengerId);
+        insertStmt.setInt(2, addressId);
+        insertStmt.setString(3, favouriteName);
+
+        insertStmt.executeUpdate();
+      }
+    }
+
   }
 
   /*
@@ -313,7 +324,7 @@ public class DatabaseMethods {
       stmt.setString(1, email);
 
       try (ResultSet rs = stmt.executeQuery()) {
-        // return if there is at least one row and if column 1 is greater than 0
+        // return if there is at least one row & if column 1 is greater than 0
         return rs.next() && rs.getInt(1) > 0;
       }
     } catch (SQLException e) {
@@ -327,7 +338,7 @@ public class DatabaseMethods {
    * Behaviour: Determines if a passenger exists with the provided email address
    * Returns: True if exists, false if not
    */
-  public boolean checkPassengerExists(String email) throws SQLException {
+    public boolean checkPassengerExists(String email) throws SQLException {
     
     String checkPassengerQuery = "SELECT COUNT(*) FROM passengers INNER JOIN accounts ON passengers.ID = accounts.ID WHERE EMAIL = ?";
 
@@ -343,6 +354,7 @@ public class DatabaseMethods {
       return true;
     }
   }
+
   /*
    * Accepts: Email address of passenger making request, id of dropoff address,
    * requested date/time of ride, and number of passengers
@@ -350,12 +362,26 @@ public class DatabaseMethods {
    * Returns: Nothing
    */
   public void insertRideRequest(String passengerEmail, int dropoffLocationId, String date, String time,
-      int numberOfPassengers) throws SQLException {
+    int numberOfPassengers) throws SQLException {
     int passengerId = this.getPassengerIdFromEmail(passengerEmail);
     int pickupAddressId = this.getAccountAddressIdFromEmail(passengerEmail);
+    
+    String insertRideRequestQuery = "INSERT INTO ride_requests (PASSENGER_ID, PICKUP_LOCATION_ID, PICKUP_DATE, PICKUP_TIME, NUMBER_OF_RIDERS, DROPOFF_LOCATION_ID) VALUES (?, ?, ?, ?, ?, ?)";
 
-    // TODO: Implement
-  }
+    try (PreparedStatement preparedStatement = conn.prepareStatement(insertRideRequestQuery)) {
+
+        // Set the values for the prepared statement
+        preparedStatement.setInt(1, passengerId);
+        preparedStatement.setInt(2, pickupAddressId);
+        preparedStatement.setString(3, date);
+        preparedStatement.setString(4, time);
+        preparedStatement.setInt(5, numberOfPassengers);
+        preparedStatement.setInt(6, dropoffLocationId);
+
+        // Execute the prepared statement to insert the data
+        preparedStatement.executeUpdate();
+    }
+}
 
   /*
    * Accepts: Email address
@@ -365,10 +391,20 @@ public class DatabaseMethods {
    */
   public int getPassengerIdFromEmail(String passengerEmail) throws SQLException {
     int passengerId = -1;
-    // TODO: Implement
+
+    String getPassengerIdFromEmail = "SELECT ID FROM passengers p INNER JOIN accounts a ON p.ID = a.ID WHERE a.EMAIL = ?";
+    try (PreparedStatement select = conn.prepareStatement(getPassengerIdFromEmail)) {
+        select.setString(1, passengerEmail);
+
+        ResultSet rs = select.executeQuery();
+        if (rs.next()) {
+            passengerId = rs.getInt("ID");
+        }
+    }
 
     return passengerId;
-  }
+}
+
 
   /*
    * Accepts: Email address
@@ -377,7 +413,18 @@ public class DatabaseMethods {
    */
   public int getDriverIdFromEmail(String driverEmail) throws SQLException {
     int driverId = -1;
-    // TODO: Implement
+
+    String getDriverIdFromEmail = "SELECT ID FROM drivers d INNER JOIN accounts a ON d.ID == a.ID WHERE a.EMAIL = ?";
+    try (
+        PreparedStatement select = conn.prepareStatement(getDriverIdFromEmail)) {
+
+      select.setString(1, driverEmail);
+
+      ResultSet rs = select.executeQuery();
+      if (rs.next()) {
+        driverId = rs.getInt("ID");
+      }
+    }
 
     return driverId;
   }
@@ -390,7 +437,18 @@ public class DatabaseMethods {
    */
   public int getAccountAddressIdFromEmail(String email) throws SQLException {
     int addressId = -1;
-    // TODO: Implement
+
+    String getAccountAddressIdFromEmail = "SELECT ID FROM addresses ad INNER JOIN accounts a ON ad.ID == a.ADDRESS_ID WHERE a.EMAIL = ?";
+    try (
+        PreparedStatement select = conn.prepareStatement(getAccountAddressIdFromEmail)) {
+
+      select.setString(1, email);
+
+      ResultSet rs = select.executeQuery();
+      if (rs.next()) {
+        addressId = rs.getInt("ID");
+      }
+    }
 
     return addressId;
   }
@@ -405,7 +463,27 @@ public class DatabaseMethods {
       throws SQLException {
     ArrayList<FavouriteDestination> favouriteDestinations = new ArrayList<FavouriteDestination>();
 
-    // TODO: Implement
+    int passengerId = getPassengerIdFromEmail(passengerEmail);
+    if (passengerId != -1) {
+      String getFavouriteDestinationsForPassenger = "SELECT f.NAME, a.ID, a.STREET, a.CITY, a.PROVINCE, a.POSTAL_CODE FROM favourite_locations f INNER JOIN addresses a ON f.LOCATION_ID = a.ID WHERE fl.PASSENGER_ID = ?";
+
+      try (PreparedStatement stmt = conn.prepareStatement(getFavouriteDestinationsForPassenger)) {
+        stmt.setInt(1, passengerId);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+          String name = rs.getString("NAME");
+          int id = rs.getInt("ID");
+          String street = rs.getString("STREET");
+          String city = rs.getString("CITY");
+          String province = rs.getString("PROVINCE");
+          String postalCode = rs.getString("POSTAL_CODE");
+
+          FavouriteDestination destination = new FavouriteDestination(name, id, street, city, province, postalCode);
+          favouriteDestinations.add(destination);
+        }
+      }
+
+    }
 
     return favouriteDestinations;
   }
@@ -419,8 +497,28 @@ public class DatabaseMethods {
   public ArrayList<RideRequest> getUncompletedRideRequests() throws SQLException {
     ArrayList<RideRequest> uncompletedRideRequests = new ArrayList<RideRequest>();
 
-    // TODO: Implement
+    String getUncompletedRideRequests = "SELECT req.ID, a.FIRST_NAME, a.LAST_NAME, ap.STREET AS PICKUP_STREET, ap.CITY AS PICKUP_CITY, ad.STREET AS DROPOFF_STREET, ad.CITY AS DROPOFF_CITY, req.PICKUP_DATE, req.PICKUP_TIME FROM ride_requests req INNER JOIN accounts a ON req.PASSENGER_ID = a.ID INNER JOIN addresses ap ON req.PICKUP_LOCATION_ID = ap.ID INNER JOIN addresses ad ON req.DROPOFF_LOCATION_ID = ad.ID LEFT JOIN rides r ON req.ID = r.REQUEST_ID WHERE r.ID IS NULL";
 
+    try (PreparedStatement stmt = conn.prepareStatement(getUncompletedRideRequests)) {
+      ResultSet rs = stmt.executeQuery();
+
+      while (rs.next()) {
+        int requestId = rs.getInt("ID");
+        String passengerFirstName = rs.getString("FIRST_NAME");
+        String passengerLastName = rs.getString("LAST_NAME");
+        String pickupStreet = rs.getString("PICKUP_STREET");
+        String pickupCity = rs.getString("PICKUP_CITY");
+        String dropoffStreet = rs.getString("DROPOFF_STREET");
+        String dropoffCity = rs.getString("DROPOFF_CITY");
+        String pickupDate = rs.getString("PICKUP_DATE");
+        String pickupTime = rs.getString("PICKUP_TIME");
+
+        RideRequest request = new RideRequest(requestId, passengerFirstName, passengerLastName,
+            pickupStreet, pickupCity, dropoffStreet, dropoffCity,
+            pickupDate, pickupTime);
+        uncompletedRideRequests.add(request);
+      }
+    }
     return uncompletedRideRequests;
   }
 
