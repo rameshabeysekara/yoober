@@ -406,6 +406,7 @@ public class DatabaseMethods {
 }
 
 
+
   /*
    * Accepts: Email address
    * Behaviour: Gets id of driver with specified email (assumes driver exists)
