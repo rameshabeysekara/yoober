@@ -313,7 +313,7 @@ public class DatabaseMethods {
       stmt.setString(1, email);
 
       try (ResultSet rs = stmt.executeQuery()) {
-        // return if there is at least one row and if column 1 is greater than 0
+        // return if there is at least one row & if column 1 is greater than 0
         return rs.next() && rs.getInt(1) > 0;
       }
     } catch (SQLException e) {
@@ -328,9 +328,20 @@ public class DatabaseMethods {
    * Returns: True if exists, false if not
    */
   public boolean checkPassengerExists(String email) throws SQLException {
-    // TODO: Implement
+    
+    String checkPassengerQuery = "SELECT COUNT(*) FROM passengers INNER JOIN accounts ON passengers.ID = accounts.ID WHERE EMAIL = ?";
 
-    return true;
+    try (PreparedStatement stmt = conn.prepareStatement(checkPassengerQuery)) {
+      stmt.setString(1, email);
+
+      try (ResultSet rs = stmt.executeQuery()) {
+        // return if there is at least one row & if column 1 is greater than 0
+        return rs.next() && rs.getInt(1) > 0;
+      }
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+      return true;
+    }
   }
 
   /*
