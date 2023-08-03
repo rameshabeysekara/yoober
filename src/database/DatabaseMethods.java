@@ -362,12 +362,26 @@ public class DatabaseMethods {
    * Returns: Nothing
    */
   public void insertRideRequest(String passengerEmail, int dropoffLocationId, String date, String time,
-      int numberOfPassengers) throws SQLException {
+    int numberOfPassengers) throws SQLException {
     int passengerId = this.getPassengerIdFromEmail(passengerEmail);
     int pickupAddressId = this.getAccountAddressIdFromEmail(passengerEmail);
+    
+    String insertRideRequestQuery = "INSERT INTO ride_requests (PASSENGER_ID, PICKUP_LOCATION_ID, PICKUP_DATE, PICKUP_TIME, NUMBER_OF_RIDERS, DROPOFF_LOCATION_ID) VALUES (?, ?, ?, ?, ?, ?)";
 
-    // TODO: Implement
-  }
+    try (PreparedStatement preparedStatement = conn.prepareStatement(insertRideRequestQuery)) {
+
+        // Set the values for the prepared statement
+        preparedStatement.setInt(1, passengerId);
+        preparedStatement.setInt(2, pickupAddressId);
+        preparedStatement.setString(3, date);
+        preparedStatement.setString(4, time);
+        preparedStatement.setInt(5, numberOfPassengers);
+        preparedStatement.setInt(6, dropoffLocationId);
+
+        // Execute the prepared statement to insert the data
+        preparedStatement.executeUpdate();
+    }
+}
 
   /*
    * Accepts: Email address
@@ -378,21 +392,20 @@ public class DatabaseMethods {
   public int getPassengerIdFromEmail(String passengerEmail) throws SQLException {
     int passengerId = -1;
 
-    String getPassengerIdFromEmail = "SELECT ID FROM passengers p INNER JOIN accounts a ON p.ID == a.ID WHERE a.EMAIL = ?";
-    try (
-        PreparedStatement select = conn.prepareStatement(getPassengerIdFromEmail)) {
+    String getPassengerIdFromEmail = "SELECT ID FROM passengers p INNER JOIN accounts a ON p.ID = a.ID WHERE a.EMAIL = ?";
+    try (PreparedStatement select = conn.prepareStatement(getPassengerIdFromEmail)) {
+        select.setString(1, passengerEmail);
 
-      select.setString(1, passengerEmail);
-
-      ResultSet rs = select.executeQuery();
-      if (rs.next()) {
-        passengerId = rs.getInt("ID");
-      }
+        ResultSet rs = select.executeQuery();
+        if (rs.next()) {
+            passengerId = rs.getInt("ID");
+        }
     }
 
     return passengerId;
+}
 
-  }
+
 
   /*
    * Accepts: Email address
