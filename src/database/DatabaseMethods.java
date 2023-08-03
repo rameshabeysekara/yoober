@@ -313,7 +313,7 @@ public class DatabaseMethods {
       stmt.setString(1, email);
 
       try (ResultSet rs = stmt.executeQuery()) {
-        // return if there is at least one row & if column 1 is greater than 0
+        // return if there is at least one row and if column 1 is greater than 0
         return rs.next() && rs.getInt(1) > 0;
       }
     } catch (SQLException e) {
@@ -327,7 +327,7 @@ public class DatabaseMethods {
    * Behaviour: Determines if a passenger exists with the provided email address
    * Returns: True if exists, false if not
    */
-    public boolean checkPassengerExists(String email) throws SQLException {
+  public boolean checkPassengerExists(String email) throws SQLException {
     
     String checkPassengerQuery = "SELECT COUNT(*) FROM passengers INNER JOIN accounts ON passengers.ID = accounts.ID WHERE EMAIL = ?";
 
@@ -343,7 +343,6 @@ public class DatabaseMethods {
       return true;
     }
   }
-
   /*
    * Accepts: Email address of passenger making request, id of dropoff address,
    * requested date/time of ride, and number of passengers
