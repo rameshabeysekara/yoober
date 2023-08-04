@@ -318,9 +318,9 @@ public class DatabaseMethods {
    * Returns: True if exists, false if not
    */
   public boolean checkDriverExists(String email) throws SQLException {
-    String checkDriverQuery = "SELECT COUNT(*) FROM drivers INNER JOIN accounts ON drivers.ID = accounts.ID WHERE EMAIL = ?";
+    String checkDriverExists = "SELECT COUNT(*) FROM drivers INNER JOIN accounts ON drivers.ID = accounts.ID WHERE EMAIL = ?";
 
-    try (PreparedStatement stmt = conn.prepareStatement(checkDriverQuery)) {
+    try (PreparedStatement stmt = conn.prepareStatement(checkDriverExists)) {
       stmt.setString(1, email);
 
       try (ResultSet rs = stmt.executeQuery()) {
@@ -340,9 +340,9 @@ public class DatabaseMethods {
    */
     public boolean checkPassengerExists(String email) throws SQLException {
     
-    String checkPassengerQuery = "SELECT COUNT(*) FROM passengers INNER JOIN accounts ON passengers.ID = accounts.ID WHERE EMAIL = ?";
+    String checkPassengerExists = "SELECT COUNT(*) FROM passengers INNER JOIN accounts ON passengers.ID = accounts.ID WHERE EMAIL = ?";
 
-    try (PreparedStatement stmt = conn.prepareStatement(checkPassengerQuery)) {
+    try (PreparedStatement stmt = conn.prepareStatement(checkPassengerExists)) {
       stmt.setString(1, email);
 
       try (ResultSet rs = stmt.executeQuery()) {
@@ -366,9 +366,9 @@ public class DatabaseMethods {
     int passengerId = this.getPassengerIdFromEmail(passengerEmail);
     int pickupAddressId = this.getAccountAddressIdFromEmail(passengerEmail);
     
-    String insertRideRequestQuery = "INSERT INTO ride_requests (PASSENGER_ID, PICKUP_LOCATION_ID, PICKUP_DATE, PICKUP_TIME, NUMBER_OF_RIDERS, DROPOFF_LOCATION_ID) VALUES (?, ?, ?, ?, ?, ?)";
+    String insertRideRequest = "INSERT INTO ride_requests (PASSENGER_ID, PICKUP_LOCATION_ID, PICKUP_DATE, PICKUP_TIME, NUMBER_OF_RIDERS, DROPOFF_LOCATION_ID) VALUES (?, ?, ?, ?, ?, ?)";
 
-    try (PreparedStatement preparedStatement = conn.prepareStatement(insertRideRequestQuery)) {
+    try (PreparedStatement preparedStatement = conn.prepareStatement(insertRideRequest)) {
 
         // Set the values for the prepared statement
         preparedStatement.setInt(1, passengerId);
@@ -531,6 +531,27 @@ public class DatabaseMethods {
   public void insertRide(Ride ride) throws SQLException {
     // TODO: Implement
     // Hint: Use getDriverIdFromEmail
+
+    // Getting the driverID using the getdriverid from email method
+    int driverId = getDriverIdFromEmail(ride.getDriverEmail());
+
+    String insertRide = "INSERT INTO rides (DRIVER_ID, REQUEST_ID, ACTUAL_START_DATE, ACTUAL_START_TIME, ACTUAL_END_DATE, ACTUAL_END_TIME, RATING_FROM_DRIVER, RATING_FROM_PASSENGER, DISTANCE, CHARGE ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    try (PreparedStatement preparedStatement = conn.prepareStatement(insertRide)) {
+        preparedStatement.setInt(1, driverId);
+        preparedStatement.setInt(2, ride.getRideRequestId());
+        preparedStatement.setString(3, ride.getStartDate());
+        preparedStatement.setString(4, ride.getStartTime());
+        preparedStatement.setString(5, ride.getEndDate());
+        preparedStatement.setString(6, ride.getEndTime());
+        preparedStatement.setInt(7, ride.getDriverRating());
+        preparedStatement.setInt(8, ride.getPassengerRating());
+        preparedStatement.setDouble(9, ride.getDistance());
+        preparedStatement.setDouble(10, ride.getCharge());
+        
+
+        preparedStatement.executeUpdate();
+    }
   }
 
 }
