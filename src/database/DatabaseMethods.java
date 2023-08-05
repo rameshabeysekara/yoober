@@ -160,12 +160,13 @@ public class DatabaseMethods {
   public int insertPassenger(Passenger passenger, int accountId) throws SQLException {
 
     if (!passenger.equals(null)) {
-      String insertPassenger = "INSERT INTO passengers (ID, CREDIT_CARD_NUMBER) VALUES (?, ?)";
+      String insertPassenger = "INSERT INTO passengers (ID, CREDIT_CARD_NUMBER) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM passengers WHERE ID = ?)";
       try (
           PreparedStatement insert = conn.prepareStatement(insertPassenger, Statement.RETURN_GENERATED_KEYS);) {
 
         insert.setInt(1, accountId);
         insert.setString(2, passenger.getCreditCardNumber());
+        insert.setInt(3, accountId);
 
         int rowsAffected = insert.executeUpdate();
 
@@ -222,12 +223,13 @@ public class DatabaseMethods {
   public int insertLicense(String licenseNumber, String licenseExpiry) throws SQLException {
     int licenseId = -1;
 
-    String insertLicense = "INSERT INTO licenses (NUMBER, EXPIRY_DATE) VALUES (?, ?)";
+    String insertLicense = "INSERT INTO licenses (NUMBER, EXPIRY_DATE) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM licenses WHERE NUMBER=?)";
     try (
         PreparedStatement insert = conn.prepareStatement(insertLicense, Statement.RETURN_GENERATED_KEYS);) {
 
       insert.setString(1, licenseNumber);
       insert.setString(2, licenseExpiry);
+      insert.setString(3, licenseNumber);
 
       int rowsAffected = insert.executeUpdate();
 
@@ -338,8 +340,8 @@ public class DatabaseMethods {
    * Behaviour: Determines if a passenger exists with the provided email address
    * Returns: True if exists, false if not
    */
-    public boolean checkPassengerExists(String email) throws SQLException {
-    
+  public boolean checkPassengerExists(String email) throws SQLException {
+
     String checkPassengerExists = "SELECT COUNT(*) FROM passengers INNER JOIN accounts ON passengers.ID = accounts.ID WHERE EMAIL = ?";
 
     try (PreparedStatement stmt = conn.prepareStatement(checkPassengerExists)) {
@@ -362,26 +364,24 @@ public class DatabaseMethods {
    * Returns: Nothing
    */
   public void insertRideRequest(String passengerEmail, int dropoffLocationId, String date, String time,
-    int numberOfPassengers) throws SQLException {
+      int numberOfPassengers) throws SQLException {
     int passengerId = this.getPassengerIdFromEmail(passengerEmail);
     int pickupAddressId = this.getAccountAddressIdFromEmail(passengerEmail);
-    
+
     String insertRideRequest = "INSERT INTO ride_requests (PASSENGER_ID, PICKUP_LOCATION_ID, PICKUP_DATE, PICKUP_TIME, NUMBER_OF_RIDERS, DROPOFF_LOCATION_ID) VALUES (?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement preparedStatement = conn.prepareStatement(insertRideRequest)) {
 
-        // Set the values for the prepared statement
-        preparedStatement.setInt(1, passengerId);
-        preparedStatement.setInt(2, pickupAddressId);
-        preparedStatement.setString(3, date);
-        preparedStatement.setString(4, time);
-        preparedStatement.setInt(5, numberOfPassengers);
-        preparedStatement.setInt(6, dropoffLocationId);
+      preparedStatement.setInt(1, passengerId);
+      preparedStatement.setInt(2, pickupAddressId);
+      preparedStatement.setString(3, date);
+      preparedStatement.setString(4, time);
+      preparedStatement.setInt(5, numberOfPassengers);
+      preparedStatement.setInt(6, dropoffLocationId);
 
-        // Execute the prepared statement to insert the data
-        preparedStatement.executeUpdate();
+      preparedStatement.executeUpdate();
     }
-}
+  }
 
   /*
    * Accepts: Email address
@@ -392,20 +392,19 @@ public class DatabaseMethods {
   public int getPassengerIdFromEmail(String passengerEmail) throws SQLException {
     int passengerId = -1;
 
-    String getPassengerIdFromEmail = "SELECT ID FROM passengers p INNER JOIN accounts a ON p.ID = a.ID WHERE a.EMAIL = ?";
-    try (PreparedStatement select = conn.prepareStatement(getPassengerIdFromEmail)) {
-        select.setString(1, passengerEmail);
+    String getPassengerIdFromEmail = "SELECT p.ID FROM passengers p INNER JOIN accounts a ON p.ID = a.ID WHERE a.EMAIL = ?";
 
-        ResultSet rs = select.executeQuery();
-        if (rs.next()) {
-            passengerId = rs.getInt("ID");
-        }
+    try (PreparedStatement select = conn.prepareStatement(getPassengerIdFromEmail)) {
+      select.setString(1, passengerEmail);
+
+      ResultSet rs = select.executeQuery();
+      if (rs.next()) {
+        passengerId = rs.getInt("ID");
+      }
     }
 
     return passengerId;
-}
-
-
+  }
 
   /*
    * Accepts: Email address
@@ -415,7 +414,7 @@ public class DatabaseMethods {
   public int getDriverIdFromEmail(String driverEmail) throws SQLException {
     int driverId = -1;
 
-    String getDriverIdFromEmail = "SELECT ID FROM drivers d INNER JOIN accounts a ON d.ID == a.ID WHERE a.EMAIL = ?";
+    String getDriverIdFromEmail = "SELECT d.ID FROM drivers d INNER JOIN accounts a ON d.ID == a.ID WHERE a.EMAIL = ?";
     try (
         PreparedStatement select = conn.prepareStatement(getDriverIdFromEmail)) {
 
@@ -439,7 +438,7 @@ public class DatabaseMethods {
   public int getAccountAddressIdFromEmail(String email) throws SQLException {
     int addressId = -1;
 
-    String getAccountAddressIdFromEmail = "SELECT ID FROM addresses ad INNER JOIN accounts a ON ad.ID == a.ADDRESS_ID WHERE a.EMAIL = ?";
+    String getAccountAddressIdFromEmail = "SELECT ad.ID FROM addresses ad INNER JOIN accounts a ON ad.ID = a.ADDRESS_ID WHERE a.EMAIL = ?";
     try (
         PreparedStatement select = conn.prepareStatement(getAccountAddressIdFromEmail)) {
 
@@ -466,7 +465,7 @@ public class DatabaseMethods {
 
     int passengerId = getPassengerIdFromEmail(passengerEmail);
     if (passengerId != -1) {
-      String getFavouriteDestinationsForPassenger = "SELECT f.NAME, a.ID, a.STREET, a.CITY, a.PROVINCE, a.POSTAL_CODE FROM favourite_locations f INNER JOIN addresses a ON f.LOCATION_ID = a.ID WHERE fl.PASSENGER_ID = ?";
+      String getFavouriteDestinationsForPassenger = "SELECT f.NAME, a.ID, a.STREET, a.CITY, a.PROVINCE, a.POSTAL_CODE FROM favourite_locations f INNER JOIN addresses a ON f.LOCATION_ID = a.ID WHERE f.PASSENGER_ID = ?";
 
       try (PreparedStatement stmt = conn.prepareStatement(getFavouriteDestinationsForPassenger)) {
         stmt.setInt(1, passengerId);
@@ -538,19 +537,18 @@ public class DatabaseMethods {
     String insertRide = "INSERT INTO rides (DRIVER_ID, REQUEST_ID, ACTUAL_START_DATE, ACTUAL_START_TIME, ACTUAL_END_DATE, ACTUAL_END_TIME, RATING_FROM_DRIVER, RATING_FROM_PASSENGER, DISTANCE, CHARGE ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement preparedStatement = conn.prepareStatement(insertRide)) {
-        preparedStatement.setInt(1, driverId);
-        preparedStatement.setInt(2, ride.getRideRequestId());
-        preparedStatement.setString(3, ride.getStartDate());
-        preparedStatement.setString(4, ride.getStartTime());
-        preparedStatement.setString(5, ride.getEndDate());
-        preparedStatement.setString(6, ride.getEndTime());
-        preparedStatement.setInt(7, ride.getDriverRating());
-        preparedStatement.setInt(8, ride.getPassengerRating());
-        preparedStatement.setDouble(9, ride.getDistance());
-        preparedStatement.setDouble(10, ride.getCharge());
-        
+      preparedStatement.setInt(1, driverId);
+      preparedStatement.setInt(2, ride.getRideRequestId());
+      preparedStatement.setString(3, ride.getStartDate());
+      preparedStatement.setString(4, ride.getStartTime());
+      preparedStatement.setString(5, ride.getEndDate());
+      preparedStatement.setString(6, ride.getEndTime());
+      preparedStatement.setInt(7, ride.getDriverRating());
+      preparedStatement.setInt(8, ride.getPassengerRating());
+      preparedStatement.setDouble(9, ride.getDistance());
+      preparedStatement.setDouble(10, ride.getCharge());
 
-        preparedStatement.executeUpdate();
+      preparedStatement.executeUpdate();
     }
   }
 
