@@ -372,7 +372,6 @@ public class DatabaseMethods {
 
     try (PreparedStatement preparedStatement = conn.prepareStatement(insertRideRequest)) {
 
-      // Set the values for the prepared statement
       preparedStatement.setInt(1, passengerId);
       preparedStatement.setInt(2, pickupAddressId);
       preparedStatement.setString(3, date);
@@ -380,7 +379,6 @@ public class DatabaseMethods {
       preparedStatement.setInt(5, numberOfPassengers);
       preparedStatement.setInt(6, dropoffLocationId);
 
-      // Execute the prepared statement to insert the data
       preparedStatement.executeUpdate();
     }
   }
