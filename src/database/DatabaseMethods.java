@@ -100,18 +100,16 @@ public class DatabaseMethods {
    * Returns: Nothing
    */
   public void createAccount(Account account, Passenger passenger, Driver driver) throws SQLException {
+    int accountId = insertAccount(account);
 
-    if (account.isDriver()) {
-      int accountId = insertAccount(account);
-      insertDriver(driver, accountId);
+    if (account.isDriver() && driver != null) {
+        insertDriver(driver, accountId);
     }
-    if (account.isPassenger()) {
-      int accountId = insertAccount(account);
-      insertPassenger(passenger, accountId);
-    } else {
-      insertAccount(account);
+
+    if (account.isPassenger() && passenger != null) {
+        insertPassenger(passenger, accountId);
     }
-  }
+}
 
   /*
    * Accepts: Account details (which includes address information)
