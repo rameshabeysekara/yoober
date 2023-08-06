@@ -526,10 +526,6 @@ public class DatabaseMethods {
    * Returns: Nothing
    */
   public void insertRide(Ride ride) throws SQLException {
-    // TODO: Implement
-    // Hint: Use getDriverIdFromEmail
-
-    // Getting the driverID using the getdriverid from email method
     int driverId = getDriverIdFromEmail(ride.getDriverEmail());
 
     String insertRide = "INSERT INTO rides (DRIVER_ID, REQUEST_ID, ACTUAL_START_DATE, ACTUAL_START_TIME, ACTUAL_END_DATE, ACTUAL_END_TIME, RATING_FROM_DRIVER, RATING_FROM_PASSENGER, DISTANCE, CHARGE ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
