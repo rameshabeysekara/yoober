@@ -10,25 +10,25 @@
 5.	Complete a ride
 •	Then, the application should accept user input to select a menu option. The user will enter the number of the menu option they wish to perform. For example, if they want to view all account details, they would enter the number 1.
 •	Based on the option entered by the user, the application should handle the request appropriately. The required behaviour for each option is as follows:
+======================================================================
 1.	The following data for each account should be displayed to the user:
-	First and last name
-	Full address (i.e. street, city, province, postal code)
-	Phone number
-	Email address
-	Whether account is used by a passenger, driver, or both
+• First and last name
+•	Full address (i.e. street, city, province, postal code)
+•	Phone number
+•	Email address
+•	Whether the account is used by a passenger, driver, or both
+
 2.	The user should be instructed to enter the email address of the driver in which they are interested. Then, the average of all available ratings given by passengers for all trips the specified driver has provided should be calculated and displayed to the user.
+
 3.	With the data provided by the user specified below, insert new records into the database as appropriate. The user should be prompted to enter values for:
 •	First and last name
 •	Birthdate
 •	Full address (i.e. street, city, province, postal code)
 •	Phone number
 •	Email address
-	Then, the user should be asked if the new account will be used by a passenger, driver, or both.
-•	If passenger, prompt user to enter:
-o	Credit card number
-•	If driver, prompt user to enter
-o	Driver’s license number
-o	Driver’s license expiry date
+•	Then, the user should be asked if the new account will be used by a passenger, driver, or both.
+•	If passenger, prompt user to enter:	Credit card number
+•	If driver, prompt user to enter:	Driver’s license number,	Driver’s license expiry date
 •	If both, prompt the user to enter the information listed above for passengers and drivers
 4.	With the data provided by the user specified below, insert new records as appropriate into the database. The user should be instructed to enter:
 •	The email address of the passenger making the request
@@ -49,10 +49,11 @@ o	Ask the user if they want to make this destination a new favourite
 •	First and last name of passenger who requested the trip
 •	Street and city of both the pick-up and destination addresses
 •	Desired pick-up date and time
-	Then, prompt the user to enter the ID corresponding to the ride they want to complete (assume input will always be a number)
-	Complete the ride in the database with the following information provided by the user:
+
+•	Then, prompt the user to enter the ID corresponding to the ride they want to complete (assume input will always be a number)
+•	Complete the ride in the database with the following information provided by the user:
 •	Driver’s email address
-o	Use this to help specify the driver for the trip
+•	Use this to help specify the driver for the trip
 •	Actual start/end date/time
 •	Distance travelled
 •	Cost
