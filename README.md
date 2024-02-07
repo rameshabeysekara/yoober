@@ -63,4 +63,3 @@ o	Ask the user if they want to make this destination a new favourite
 •	Remember, all addresses should only be stored in the database once. So, whenever address details are provided by the user, a new address should only be created in the database if it doesn’t already exist.
 •	For options 2, 4, and 5, if no passenger/driver can be found with the email address entered by the user, indicate this to the user and ask for a new email address until a valid one is provided
 •	When the user is expected to enter numeric information (e.g. distance travelled for trip), assume they input valid data. There is no requirement to validate the input is numeric.
-![image](https://github.com/rameshabeysekara/yoober/assets/90224141/7b330457-07b1-4f18-94f7-591ee70a4cdd)
